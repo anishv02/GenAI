@@ -143,8 +143,10 @@ function App() {
 
       <footer className="footer">
         <p>
-          Built with React + Flask + Ollama | 
-          <a href="https://github.com/anishv02/GenAI" target="_blank" rel="noopener noreferrer"> View on GitHub</a>
+          Built by <strong>Anishv Rawal</strong> | React + Flask + AI
+        </p>
+        <p>
+          <a href="https://www.linkedin.com/in/anishvrawal" target="_blank" rel="noopener noreferrer">LinkedIn</a>
         </p>
       </footer>
     </div>

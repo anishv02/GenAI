@@ -412,13 +412,33 @@ body::before {
   margin-top: auto;
   padding-top: 60px;
   text-align: center;
-  color: var(--text-muted);
-  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.footer p {
+  margin-bottom: 8px;
+}
+
+.footer p:first-child {
+  font-size: 1rem;
+}
+
+.footer strong {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .footer a {
   color: var(--accent-primary);
   text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer a:hover {
+  color: var(--accent-secondary);
 }
 
 /* Responsive */

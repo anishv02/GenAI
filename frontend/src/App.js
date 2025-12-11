@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-// Use environment variable for API URL, fallback to localhost for development
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+// Use empty string for same-domain deployment on Vercel, or env variable for separate hosting
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 function App() {
   const [url, setUrl] = useState('');

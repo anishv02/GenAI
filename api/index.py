@@ -2,15 +2,12 @@
 Vercel Serverless Function for Website Summarizer
 """
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from openai import OpenAI
+from http.server import BaseHTTPRequestHandler
+import json
 import os
 import requests
 from bs4 import BeautifulSoup
-
-app = Flask(__name__)
-CORS(app)
+from openai import OpenAI
 
 # Use Groq API (cloud)
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
@@ -84,40 +81,60 @@ def summarize(url):
     return {"summary": response.choices[0].message.content}
 
 
-@app.route('/api/summarize', methods=['POST'])
-def api_summarize():
-    try:
-        if not llm_client:
-            return jsonify({"error": "GROQ_API_KEY not configured"}), 500
-            
-        data = request.get_json()
-        url = data.get('url')
-        
-        if not url:
-            return jsonify({"error": "URL is required"}), 400
-        
-        if not url.startswith(('http://', 'https://')):
-            url = 'https://' + url
-        
-        result = summarize(url)
-        
-        if "error" in result:
-            return jsonify(result), 400
-        
-        return jsonify(result)
+class handler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
     
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({
-        "status": "ok",
-        "model": MODEL
-    })
-
-
-@app.route('/')
-def index():
-    return jsonify({"message": "Website Summarizer API"})
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        
+        response = {"status": "ok", "model": MODEL}
+        self.wfile.write(json.dumps(response).encode())
+    
+    def do_POST(self):
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            data = json.loads(body)
+            
+            url = data.get('url', '')
+            
+            if not url:
+                self._send_error(400, "URL is required")
+                return
+            
+            if not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            
+            if not llm_client:
+                self._send_error(500, "GROQ_API_KEY not configured")
+                return
+            
+            result = summarize(url)
+            
+            if "error" in result:
+                self._send_error(400, result["error"])
+                return
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode())
+            
+        except Exception as e:
+            self._send_error(500, str(e))
+    
+    def _send_error(self, code, message):
+        self.send_response(code)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps({"error": message}).encode())
